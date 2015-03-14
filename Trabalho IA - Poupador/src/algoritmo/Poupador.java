@@ -12,7 +12,6 @@ import java.util.List;
  * @author Ney Moura
  * @since 14/03/2015
  */
-@SuppressWarnings("unused")
 public class Poupador extends ProgramaPoupador {
 
 	private final int MOVIMENTACAO_PARADO = 0;
@@ -39,6 +38,8 @@ public class Poupador extends ProgramaPoupador {
 	private final int OLFATO_CINCO_ATRAS = 5;
 
 	private final int UTILIDADE_NULA = 0;
+
+	private final boolean DEBUGA_ESTADOS = false;
 
 	/**
 	 * Executado a cada tick
@@ -68,13 +69,21 @@ public class Poupador extends ProgramaPoupador {
 
 		});
 
-		/*
-		 * for (Estado estado : estados) { System.out.println(estado.utilidade +
-		 * ":" + estado.movimentacaoRealizada); }
-		 * 
-		 * try { Thread.sleep(10000); } catch (InterruptedException e) {
-		 * e.printStackTrace(); }
-		 */
+		if (DEBUGA_ESTADOS) {
+			
+			System.out.println("***DEBUG***");
+			
+			for (Estado estado : estados) {
+				System.out.println(estado.utilidade + ":"
+						+ estado.movimentacaoRealizada);
+			}
+
+			try {
+				Thread.sleep(10000);
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+		}
 
 		// retorna a movimentacao realizada do estado com maior utilidade
 		return estados.get(0).movimentacaoRealizada;
@@ -200,48 +209,6 @@ public class Poupador extends ProgramaPoupador {
 	 */
 	private Estado calculaNovoEstado(int movimentacao) {
 
-		Point posicaoOriginal = sensor.getPosicao();
-
-		Point novaPosicao = posicaoOriginal;
-
-		switch (movimentacao) {
-
-		case MOVIMENTACAO_PARADO:
-
-			// novaPosicao = posicaoOriginal;
-
-			break;
-
-		case MOVIMENTACAO_CIMA:
-
-			novaPosicao.y += 1;
-
-			break;
-
-		case MOVIMENTACAO_BAIXO:
-
-			novaPosicao.y -= 1;
-
-			break;
-
-		case MOVIMENTACAO_DIREITA:
-
-			novaPosicao.x += 1;
-
-			break;
-
-		case MOVIMENTACAO_ESQUERDA:
-
-			novaPosicao.x -= 1;
-
-			break;
-
-		default:
-			break;
-		}
-
-		sensor.setPosicao(novaPosicao);
-
 		Estado estadoSucessor = new Estado(sensor.getVisaoIdentificacao(),
 				sensor.getAmbienteOlfatoLadrao(),
 				sensor.getAmbienteOlfatoPoupador(), sensor.getNumeroDeMoedas(),
@@ -249,9 +216,120 @@ public class Poupador extends ProgramaPoupador {
 				sensor.getNumeroJogadasImunes(), sensor.getPosicao(),
 				UTILIDADE_NULA, movimentacao);
 
-		estadoSucessor.utilidade = calculaUtilidade(estadoSucessor);
+		switch (movimentacao) {
 
-		sensor.setPosicao(posicaoOriginal);
+		case MOVIMENTACAO_PARADO:
+
+			// do nothing
+			
+			for (int i = 0; i < 23; i++) {
+				estadoSucessor.matrizVisao[i] = VISAO_INDISPONIVEL;
+			}
+			
+			for (int i = 0; i < 7; i++) {
+				estadoSucessor.matrizOfaltivaLadroes[i] = OLFATO_VAZIO;
+				estadoSucessor.matrizOfaltivaPoupadores[i] = OLFATO_VAZIO;
+			}
+
+			break;
+
+		case MOVIMENTACAO_CIMA:
+
+			// considera apenas a visao e olfato do setor superior
+			for (int i = 10; i <= 23; i++) {
+				estadoSucessor.matrizVisao[i] = VISAO_INDISPONIVEL;
+			}
+
+			for (int i = 3; i <= 7; i++) {
+				estadoSucessor.matrizOfaltivaLadroes[i] = OLFATO_VAZIO;
+				estadoSucessor.matrizOfaltivaPoupadores[i] = OLFATO_VAZIO;
+			}
+
+			break;
+
+		case MOVIMENTACAO_BAIXO:
+
+			// considera apenas a visao e olfato do setor inferior
+			for (int i = 0; i <= 13; i++) {
+				estadoSucessor.matrizVisao[i] = VISAO_INDISPONIVEL;
+			}
+
+			for (int i = 0; i <= 4; i++) {
+				estadoSucessor.matrizOfaltivaLadroes[i] = OLFATO_VAZIO;
+				estadoSucessor.matrizOfaltivaPoupadores[i] = OLFATO_VAZIO;
+			}
+
+			break;
+
+		case MOVIMENTACAO_DIREITA:
+
+			// considera apenas a visao e olfato do setor direito
+			estadoSucessor.matrizVisao[0] = VISAO_INDISPONIVEL;
+			estadoSucessor.matrizVisao[1] = VISAO_INDISPONIVEL;
+			estadoSucessor.matrizVisao[2] = VISAO_INDISPONIVEL;
+			estadoSucessor.matrizVisao[5] = VISAO_INDISPONIVEL;
+			estadoSucessor.matrizVisao[6] = VISAO_INDISPONIVEL;
+			estadoSucessor.matrizVisao[7] = VISAO_INDISPONIVEL;
+			estadoSucessor.matrizVisao[10] = VISAO_INDISPONIVEL;
+			estadoSucessor.matrizVisao[11] = VISAO_INDISPONIVEL;
+			estadoSucessor.matrizVisao[14] = VISAO_INDISPONIVEL;
+			estadoSucessor.matrizVisao[15] = VISAO_INDISPONIVEL;
+			estadoSucessor.matrizVisao[16] = VISAO_INDISPONIVEL;
+			estadoSucessor.matrizVisao[19] = VISAO_INDISPONIVEL;
+			estadoSucessor.matrizVisao[20] = VISAO_INDISPONIVEL;
+			estadoSucessor.matrizVisao[21] = VISAO_INDISPONIVEL;
+
+			estadoSucessor.matrizOfaltivaLadroes[0] = OLFATO_VAZIO;
+			estadoSucessor.matrizOfaltivaLadroes[1] = OLFATO_VAZIO;
+			estadoSucessor.matrizOfaltivaLadroes[3] = OLFATO_VAZIO;
+			estadoSucessor.matrizOfaltivaLadroes[5] = OLFATO_VAZIO;
+			estadoSucessor.matrizOfaltivaLadroes[6] = OLFATO_VAZIO;
+
+			estadoSucessor.matrizOfaltivaPoupadores[0] = OLFATO_VAZIO;
+			estadoSucessor.matrizOfaltivaPoupadores[1] = OLFATO_VAZIO;
+			estadoSucessor.matrizOfaltivaPoupadores[3] = OLFATO_VAZIO;
+			estadoSucessor.matrizOfaltivaPoupadores[5] = OLFATO_VAZIO;
+			estadoSucessor.matrizOfaltivaPoupadores[6] = OLFATO_VAZIO;
+
+			break;
+
+		case MOVIMENTACAO_ESQUERDA:
+
+			// considera apenas a visao e olfato do setor esquerdo
+			estadoSucessor.matrizVisao[2] = VISAO_INDISPONIVEL;
+			estadoSucessor.matrizVisao[3] = VISAO_INDISPONIVEL;
+			estadoSucessor.matrizVisao[4] = VISAO_INDISPONIVEL;
+			estadoSucessor.matrizVisao[7] = VISAO_INDISPONIVEL;
+			estadoSucessor.matrizVisao[8] = VISAO_INDISPONIVEL;
+			estadoSucessor.matrizVisao[9] = VISAO_INDISPONIVEL;
+			estadoSucessor.matrizVisao[12] = VISAO_INDISPONIVEL;
+			estadoSucessor.matrizVisao[13] = VISAO_INDISPONIVEL;
+			estadoSucessor.matrizVisao[16] = VISAO_INDISPONIVEL;
+			estadoSucessor.matrizVisao[17] = VISAO_INDISPONIVEL;
+			estadoSucessor.matrizVisao[18] = VISAO_INDISPONIVEL;
+			estadoSucessor.matrizVisao[21] = VISAO_INDISPONIVEL;
+			estadoSucessor.matrizVisao[22] = VISAO_INDISPONIVEL;
+			estadoSucessor.matrizVisao[23] = VISAO_INDISPONIVEL;
+
+			estadoSucessor.matrizOfaltivaLadroes[1] = OLFATO_VAZIO;
+			estadoSucessor.matrizOfaltivaLadroes[2] = OLFATO_VAZIO;
+			estadoSucessor.matrizOfaltivaLadroes[4] = OLFATO_VAZIO;
+			estadoSucessor.matrizOfaltivaLadroes[6] = OLFATO_VAZIO;
+			estadoSucessor.matrizOfaltivaLadroes[7] = OLFATO_VAZIO;
+
+			estadoSucessor.matrizOfaltivaPoupadores[1] = OLFATO_VAZIO;
+			estadoSucessor.matrizOfaltivaPoupadores[2] = OLFATO_VAZIO;
+			estadoSucessor.matrizOfaltivaPoupadores[4] = OLFATO_VAZIO;
+			estadoSucessor.matrizOfaltivaPoupadores[6] = OLFATO_VAZIO;
+			estadoSucessor.matrizOfaltivaPoupadores[7] = OLFATO_VAZIO;
+
+			break;
+
+		default:
+			break;
+		}
+
+		estadoSucessor.utilidade = calculaUtilidade(estadoSucessor);
 
 		return estadoSucessor;
 
@@ -288,14 +366,12 @@ public class Poupador extends ProgramaPoupador {
 
 			case VISAO_INDISPONIVEL:
 
-				//utilidadeVisual += -1;
 				continue;
 
 			case VISAO_MUNDO_EXTERIOR:
 
-				//utilidadeVisual += -1;
 				continue;
-				
+
 			case VISAO_CELULA_VAZIA:
 
 				utilidadeVisual += +25;
@@ -330,7 +406,7 @@ public class Poupador extends ProgramaPoupador {
 				if (estado.jogadasImunes == 0 && estado.moedas >= 10) {
 					utilidadeVisual += 50;
 				} else {
-					utilidadeVisual += 10;
+					utilidadeVisual += 0;
 				}
 
 				break;
@@ -354,7 +430,7 @@ public class Poupador extends ProgramaPoupador {
 		}
 
 		return utilidadeVisual;
-		
+
 	}
 
 	/**
@@ -364,8 +440,102 @@ public class Poupador extends ProgramaPoupador {
 	 * @return int com a utilidade olfativa
 	 */
 	private int utilidadeOlfato(Estado estado) {
-//		return 0;
-		return (int) (Math.random() * 10);
+
+		int utilidadeOlfativa = 0;
+
+		for (int i = 0; i < estado.matrizOfaltivaLadroes.length; i++) {
+
+			int contatoOlfativoLadrao = estado.matrizOfaltivaLadroes[i];
+			int contatoOlfativoPoupador = estado.matrizOfaltivaLadroes[i];
+
+			switch (contatoOlfativoLadrao) {
+
+			case OLFATO_VAZIO:
+
+				utilidadeOlfativa += 50;
+
+				break;
+
+			case OLFATO_UM_ATRAS:
+
+				utilidadeOlfativa += -100;
+
+				break;
+
+			case OLFATO_DOIS_ATRAS:
+
+				utilidadeOlfativa += -90;
+
+				break;
+
+			case OLFATO_TRES_ATRAS:
+
+				utilidadeOlfativa += -80;
+
+				break;
+
+			case OLFATO_QUATRO_ATRAS:
+
+				utilidadeOlfativa += -50;
+
+				break;
+
+			case OLFATO_CINCO_ATRAS:
+
+				utilidadeOlfativa += -40;
+
+				break;
+
+			default:
+				break;
+			}
+
+			switch (contatoOlfativoPoupador) {
+
+			case OLFATO_VAZIO:
+
+				utilidadeOlfativa += 50;
+
+				break;
+
+			case OLFATO_UM_ATRAS:
+
+				utilidadeOlfativa += -100;
+
+				break;
+
+			case OLFATO_DOIS_ATRAS:
+
+				utilidadeOlfativa += -90;
+
+				break;
+
+			case OLFATO_TRES_ATRAS:
+
+				utilidadeOlfativa += -80;
+
+				break;
+
+			case OLFATO_QUATRO_ATRAS:
+
+				utilidadeOlfativa += -50;
+
+				break;
+
+			case OLFATO_CINCO_ATRAS:
+
+				utilidadeOlfativa += -40;
+
+				break;
+
+			default:
+				break;
+			}
+
+		}
+
+		return utilidadeOlfativa;
+
 	}
 
 }
