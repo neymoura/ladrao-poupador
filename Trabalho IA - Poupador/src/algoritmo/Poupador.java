@@ -41,6 +41,8 @@ public class Poupador extends ProgramaPoupador {
 
 	private final boolean DEBUGA_ESTADOS = false;
 
+	private List<Point> areaExplorada = new ArrayList<Point>();
+
 	/**
 	 * Executado a cada tick
 	 * 
@@ -70,24 +72,27 @@ public class Poupador extends ProgramaPoupador {
 		});
 
 		if (DEBUGA_ESTADOS) {
-			
+
 			System.out.println("***DEBUG***");
-			
+
 			for (Estado estado : estados) {
 				System.out.println(estado.utilidade + ":"
 						+ estado.movimentacaoRealizada);
 			}
 
-			try {
-				Thread.sleep(10000);
-			} catch (InterruptedException e) {
-				e.printStackTrace();
-			}
+			// try {
+			// Thread.sleep(3000);
+			// } catch (InterruptedException e) {
+			// e.printStackTrace();
+			// }
 		}
 
-		// retorna a movimentacao realizada do estado com maior utilidade
-		return estados.get(0).movimentacaoRealizada;
+		Estado melhorEstado = estados.get(0);
 
+		areaExplorada.add(melhorEstado.posicao);
+
+		// retorna a movimentacao realizada do estado com maior utilidade
+		return melhorEstado.movimentacaoRealizada;
 	}
 
 	/**
@@ -209,24 +214,48 @@ public class Poupador extends ProgramaPoupador {
 	 */
 	private Estado calculaNovoEstado(int movimentacao) {
 
-		Estado estadoSucessor = new Estado(sensor.getVisaoIdentificacao(),
-				sensor.getAmbienteOlfatoLadrao(),
-				sensor.getAmbienteOlfatoPoupador(), sensor.getNumeroDeMoedas(),
+		// BUG-FIX
+		// INÍCIO CÓPIA DAS MATRIZES
+
+		int[] matrizVisao = new int[sensor.getVisaoIdentificacao().length];
+
+		for (int i = 0; i < matrizVisao.length; i++) {
+			matrizVisao[i] = sensor.getVisaoIdentificacao()[i];
+		}
+
+		int[] matrizOlfatoLadrao = new int[sensor.getAmbienteOlfatoLadrao().length];
+
+		for (int i = 0; i < matrizOlfatoLadrao.length; i++) {
+			matrizVisao[i] = sensor.getAmbienteOlfatoLadrao()[i];
+		}
+
+		int[] matrizOlfatoPoupador = new int[sensor.getAmbienteOlfatoLadrao().length];
+
+		for (int i = 0; i < matrizOlfatoPoupador.length; i++) {
+			matrizVisao[i] = sensor.getAmbienteOlfatoLadrao()[i];
+		}
+
+		// FIM DA CÓPIA
+
+		Estado estadoSucessor = new Estado(matrizVisao, matrizOlfatoLadrao,
+				matrizOlfatoPoupador, sensor.getNumeroDeMoedas(),
 				sensor.getNumeroDeMoedasBanco(),
 				sensor.getNumeroJogadasImunes(), sensor.getPosicao(),
 				UTILIDADE_NULA, movimentacao);
+
+		final double x = sensor.getPosicao().getX();
+		final double y = sensor.getPosicao().getY();
 
 		switch (movimentacao) {
 
 		case MOVIMENTACAO_PARADO:
 
 			// do nothing
-			
-			for (int i = 0; i < 23; i++) {
+			for (int i = 0; i <= 23; i++) {
 				estadoSucessor.matrizVisao[i] = VISAO_INDISPONIVEL;
 			}
-			
-			for (int i = 0; i < 7; i++) {
+
+			for (int i = 0; i <= 7; i++) {
 				estadoSucessor.matrizOfaltivaLadroes[i] = OLFATO_VAZIO;
 				estadoSucessor.matrizOfaltivaPoupadores[i] = OLFATO_VAZIO;
 			}
@@ -235,12 +264,14 @@ public class Poupador extends ProgramaPoupador {
 
 		case MOVIMENTACAO_CIMA:
 
+			estadoSucessor.posicao.setLocation(x + 1, y);
+
 			// considera apenas a visao e olfato do setor superior
-			for (int i = 10; i <= 23; i++) {
+			for (int i = 14; i <= 23; i++) {
 				estadoSucessor.matrizVisao[i] = VISAO_INDISPONIVEL;
 			}
 
-			for (int i = 3; i <= 7; i++) {
+			for (int i = 5; i <= 7; i++) {
 				estadoSucessor.matrizOfaltivaLadroes[i] = OLFATO_VAZIO;
 				estadoSucessor.matrizOfaltivaPoupadores[i] = OLFATO_VAZIO;
 			}
@@ -249,12 +280,14 @@ public class Poupador extends ProgramaPoupador {
 
 		case MOVIMENTACAO_BAIXO:
 
+			estadoSucessor.posicao.setLocation(x - 1, y);
+
 			// considera apenas a visao e olfato do setor inferior
-			for (int i = 0; i <= 13; i++) {
+			for (int i = 0; i <= 9; i++) {
 				estadoSucessor.matrizVisao[i] = VISAO_INDISPONIVEL;
 			}
 
-			for (int i = 0; i <= 4; i++) {
+			for (int i = 0; i <= 2; i++) {
 				estadoSucessor.matrizOfaltivaLadroes[i] = OLFATO_VAZIO;
 				estadoSucessor.matrizOfaltivaPoupadores[i] = OLFATO_VAZIO;
 			}
@@ -263,64 +296,52 @@ public class Poupador extends ProgramaPoupador {
 
 		case MOVIMENTACAO_DIREITA:
 
+			estadoSucessor.posicao.setLocation(x, y + 1);
+
 			// considera apenas a visao e olfato do setor direito
 			estadoSucessor.matrizVisao[0] = VISAO_INDISPONIVEL;
 			estadoSucessor.matrizVisao[1] = VISAO_INDISPONIVEL;
-			estadoSucessor.matrizVisao[2] = VISAO_INDISPONIVEL;
 			estadoSucessor.matrizVisao[5] = VISAO_INDISPONIVEL;
 			estadoSucessor.matrizVisao[6] = VISAO_INDISPONIVEL;
-			estadoSucessor.matrizVisao[7] = VISAO_INDISPONIVEL;
 			estadoSucessor.matrizVisao[10] = VISAO_INDISPONIVEL;
 			estadoSucessor.matrizVisao[11] = VISAO_INDISPONIVEL;
 			estadoSucessor.matrizVisao[14] = VISAO_INDISPONIVEL;
 			estadoSucessor.matrizVisao[15] = VISAO_INDISPONIVEL;
-			estadoSucessor.matrizVisao[16] = VISAO_INDISPONIVEL;
 			estadoSucessor.matrizVisao[19] = VISAO_INDISPONIVEL;
 			estadoSucessor.matrizVisao[20] = VISAO_INDISPONIVEL;
-			estadoSucessor.matrizVisao[21] = VISAO_INDISPONIVEL;
 
 			estadoSucessor.matrizOfaltivaLadroes[0] = OLFATO_VAZIO;
-			estadoSucessor.matrizOfaltivaLadroes[1] = OLFATO_VAZIO;
 			estadoSucessor.matrizOfaltivaLadroes[3] = OLFATO_VAZIO;
 			estadoSucessor.matrizOfaltivaLadroes[5] = OLFATO_VAZIO;
-			estadoSucessor.matrizOfaltivaLadroes[6] = OLFATO_VAZIO;
 
 			estadoSucessor.matrizOfaltivaPoupadores[0] = OLFATO_VAZIO;
-			estadoSucessor.matrizOfaltivaPoupadores[1] = OLFATO_VAZIO;
 			estadoSucessor.matrizOfaltivaPoupadores[3] = OLFATO_VAZIO;
 			estadoSucessor.matrizOfaltivaPoupadores[5] = OLFATO_VAZIO;
-			estadoSucessor.matrizOfaltivaPoupadores[6] = OLFATO_VAZIO;
 
 			break;
 
 		case MOVIMENTACAO_ESQUERDA:
 
+			estadoSucessor.posicao.setLocation(x, y - 1);
+
 			// considera apenas a visao e olfato do setor esquerdo
-			estadoSucessor.matrizVisao[2] = VISAO_INDISPONIVEL;
 			estadoSucessor.matrizVisao[3] = VISAO_INDISPONIVEL;
 			estadoSucessor.matrizVisao[4] = VISAO_INDISPONIVEL;
-			estadoSucessor.matrizVisao[7] = VISAO_INDISPONIVEL;
 			estadoSucessor.matrizVisao[8] = VISAO_INDISPONIVEL;
 			estadoSucessor.matrizVisao[9] = VISAO_INDISPONIVEL;
 			estadoSucessor.matrizVisao[12] = VISAO_INDISPONIVEL;
 			estadoSucessor.matrizVisao[13] = VISAO_INDISPONIVEL;
-			estadoSucessor.matrizVisao[16] = VISAO_INDISPONIVEL;
 			estadoSucessor.matrizVisao[17] = VISAO_INDISPONIVEL;
 			estadoSucessor.matrizVisao[18] = VISAO_INDISPONIVEL;
-			estadoSucessor.matrizVisao[21] = VISAO_INDISPONIVEL;
 			estadoSucessor.matrizVisao[22] = VISAO_INDISPONIVEL;
 			estadoSucessor.matrizVisao[23] = VISAO_INDISPONIVEL;
 
-			estadoSucessor.matrizOfaltivaLadroes[1] = OLFATO_VAZIO;
 			estadoSucessor.matrizOfaltivaLadroes[2] = OLFATO_VAZIO;
 			estadoSucessor.matrizOfaltivaLadroes[4] = OLFATO_VAZIO;
-			estadoSucessor.matrizOfaltivaLadroes[6] = OLFATO_VAZIO;
 			estadoSucessor.matrizOfaltivaLadroes[7] = OLFATO_VAZIO;
 
-			estadoSucessor.matrizOfaltivaPoupadores[1] = OLFATO_VAZIO;
 			estadoSucessor.matrizOfaltivaPoupadores[2] = OLFATO_VAZIO;
 			estadoSucessor.matrizOfaltivaPoupadores[4] = OLFATO_VAZIO;
-			estadoSucessor.matrizOfaltivaPoupadores[6] = OLFATO_VAZIO;
 			estadoSucessor.matrizOfaltivaPoupadores[7] = OLFATO_VAZIO;
 
 			break;
@@ -343,9 +364,135 @@ public class Poupador extends ProgramaPoupador {
 	 */
 	private int calculaUtilidade(Estado estado) {
 
-		return utilidadeVisao(estado) + utilidadeOlfato(estado);
-		// return (int) (Math.random()*5);
+		int pesoAdicional = 0;
 
+		// estimula a exploracao
+		if (estado.movimentacaoRealizada == MOVIMENTACAO_PARADO) {
+			pesoAdicional += 100000;
+		}
+
+		// busca por posicao já explorada, desfavorecendo sua exploracao
+		for (Point point : areaExplorada) {
+			if (point.equals(estado.posicao)) {
+				pesoAdicional += 500;
+				break;
+			}
+		}
+
+		// verifica possibilidade imediata do movimento
+		pesoAdicional += visaoImediata(estado);
+
+		return (utilidadeVisao(estado) + utilidadeOlfato(estado)) - pesoAdicional;
+
+	}
+
+	/**
+	 * Calcula qual a utilidade visual imediata a frente do movimento
+	 * 
+	 * @param estado
+	 * @return int com a utilidade visual imediata
+	 */
+	private int visaoImediata(Estado estado) {
+		
+		int pesoAdicionalImediato = 0;
+		int contatoVisual = -999;
+		
+		switch (estado.movimentacaoRealizada) {
+
+		case MOVIMENTACAO_PARADO:
+			
+			break;
+
+		case MOVIMENTACAO_CIMA:
+			
+			contatoVisual = estado.matrizVisao[7];
+			
+			break;
+
+		case MOVIMENTACAO_BAIXO:
+			
+			contatoVisual = estado.matrizVisao[16];
+			
+			break;
+
+		case MOVIMENTACAO_DIREITA:
+			
+			contatoVisual = estado.matrizVisao[12];
+
+			break;
+
+		case MOVIMENTACAO_ESQUERDA:
+			
+			contatoVisual = estado.matrizVisao[11];
+			
+			break;
+
+		default:
+			break;
+		}
+		
+		switch (contatoVisual) {
+
+		case VISAO_INDISPONIVEL:
+
+			pesoAdicionalImediato += 100000;
+			
+			break;
+
+		case VISAO_MUNDO_EXTERIOR:
+
+			pesoAdicionalImediato += 100000;
+			
+			break;
+
+		case VISAO_CELULA_VAZIA:
+
+			pesoAdicionalImediato += 0;
+
+			break;
+
+		case VISAO_PAREDE:
+
+			pesoAdicionalImediato += 100000;
+
+			break;
+
+		case VISAO_BANCO:
+
+			pesoAdicionalImediato -= (30 * estado.moedas) + (estado.moedasNoBanco);
+
+			break;
+
+		case VISAO_MOEDA:
+
+			pesoAdicionalImediato -= 100000;
+
+			break;
+
+		case VISAO_PASTILHA:
+
+			if (estado.jogadasImunes == 0 && estado.moedas >= 10) {
+				pesoAdicionalImediato -= estado.moedas;
+			} else {
+				pesoAdicionalImediato += 100;
+			}
+
+			break;
+
+		case VISAO_POUPADOR:
+
+			pesoAdicionalImediato += 100;
+
+			break;
+
+		case VISAO_LADRAO:
+
+			pesoAdicionalImediato += 1000 * (estado.moedas + 1);
+
+		default:
+			break;
+		}
+		return pesoAdicionalImediato;
 	}
 
 	/**
@@ -366,45 +513,45 @@ public class Poupador extends ProgramaPoupador {
 
 			case VISAO_INDISPONIVEL:
 
+				utilidadeVisual -= 2;
+
 				continue;
 
 			case VISAO_MUNDO_EXTERIOR:
+
+				utilidadeVisual += 0;
 
 				continue;
 
 			case VISAO_CELULA_VAZIA:
 
-				utilidadeVisual += +25;
+				utilidadeVisual += 45;
 
 				break;
 
 			case VISAO_PAREDE:
 
-				utilidadeVisual += -25;
+				utilidadeVisual += 0;
 
 				break;
 
 			case VISAO_BANCO:
 
-				if (estado.moedas >= 5) {
-					utilidadeVisual += 100;
-				} else {
-					utilidadeVisual += 30;
-				}
+				utilidadeVisual += (30 * estado.moedas)
+						+ (estado.moedasNoBanco);
 
 				break;
 
 			case VISAO_MOEDA:
 
-				utilidadeVisual += 100;
+				utilidadeVisual += 200;
 
 				break;
 
 			case VISAO_PASTILHA:
 
-				// adicionar '&& ladraoPerto'
 				if (estado.jogadasImunes == 0 && estado.moedas >= 10) {
-					utilidadeVisual += 50;
+					utilidadeVisual += estado.moedas;
 				} else {
 					utilidadeVisual += 0;
 				}
@@ -413,15 +560,13 @@ public class Poupador extends ProgramaPoupador {
 
 			case VISAO_POUPADOR:
 
-				utilidadeVisual += -250;
+				utilidadeVisual += -20;
 
 				break;
 
 			case VISAO_LADRAO:
 
-				utilidadeVisual += -500;
-
-				break;
+				utilidadeVisual += -100 * (estado.moedas + 1);
 
 			default:
 				break;
@@ -452,7 +597,7 @@ public class Poupador extends ProgramaPoupador {
 
 			case OLFATO_VAZIO:
 
-				utilidadeOlfativa += 50;
+				utilidadeOlfativa += 0;
 
 				break;
 
@@ -494,7 +639,7 @@ public class Poupador extends ProgramaPoupador {
 
 			case OLFATO_VAZIO:
 
-				utilidadeOlfativa += 50;
+				utilidadeOlfativa += 0;
 
 				break;
 
